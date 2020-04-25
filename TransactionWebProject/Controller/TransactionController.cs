@@ -13,7 +13,7 @@ namespace TransactionWebProject.Controller
     [Route("api/[controller]")]
     public class TransactionController : ControllerBase
     {
-        TransactionDbContext dbContext { get; set; }
+        TransactionDbContext dbContext { get;  }
         public TransactionController(TransactionDbContext transactionDb)
         {
             this.dbContext = transactionDb;
@@ -64,11 +64,14 @@ namespace TransactionWebProject.Controller
         [HttpPost]
         public ActionResult Post(Transaction transaction)
         {
-            if (transaction == null)
+            if (transaction == null || transaction._currency == null)
             {
-                return BadRequest();
+                return BadRequest(transaction);
             }
-            if (TransacrionExist(transaction.id)) return BadRequest();
+            //if (TransacrionExist(transaction.id)) return BadRequest("SMTH");
+
+            transaction._currency.CurrencyDate = transaction.TransactionDate;
+
             dbContext.Transactions.Add(transaction);
             dbContext.SaveChanges();
             return Ok(transaction);
