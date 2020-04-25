@@ -7,6 +7,10 @@ namespace TransactionModel.ModelContext
 {
     public class Currency
     {
+        public Currency()
+        {
+        }
+
         public Currency(string currencyName,DateTime currencyDate)
         {
             this.CurrencyName = currencyName;

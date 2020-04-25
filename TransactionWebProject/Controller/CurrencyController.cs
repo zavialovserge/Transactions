@@ -19,33 +19,27 @@ namespace TransactionWebProject.Controller
         [HttpGet]
         public IActionResult Get(string currencyName,DateTime currencyDate)
         {
-            var item = _dbContext.Currencies.Find(currencyName,currencyDate);
+            string currName = currencyName.ToUpper();
+            if (currencyName == "UAH")
+            {
+                return new BadRequestResult();
+            }
+            var item = _dbContext.Currencies.Find(currName, currencyDate);
             if (item == null)
             {
-                Currency currency = new Currency(currencyName, currencyDate);
+                Currency currency = new Currency(currName, currencyDate);
                 if (currency != null && currency.Amount != 0.00m)
                 {
                     _dbContext.Currencies.Add(currency);
                     _dbContext.SaveChanges();
-                    return new ObjectResult(item);
+                    return new ObjectResult(currency);
                 }
                 return NotFound(currency);
             }
             return new ObjectResult(item);
         }
         
-        [HttpPost]
-        public ActionResult Post(Currency currency)
-        {
-            if (currency == null )
-            {
-                return BadRequest(currency);
-            }
-            //if (TransacrionExist(transaction.id)) return BadRequest("SMTH");
-            if(_dbContext.Currencies.Find(currency.CurrencyName,currency.CurrencyDate) != null) return BadRequest(currency);
-            _dbContext.Currencies.Add(currency);
-            _dbContext.SaveChanges();
-            return Ok(currency);
-        }
+
+       
     }
 }

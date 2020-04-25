@@ -9,27 +9,58 @@ using TransactionModel.ModelContext;
 
 namespace TransactionWebProject.Controller
 {
+    public static class RandomExtentions
+    {
+        public static int NextInt32(this Random rng)
+        {
+            int firstBits = rng.Next(0, 1 << 4) << 28;
+            int lastBits = rng.Next(0, 1 << 28);
+            return firstBits | lastBits;
+        }
+
+        public static decimal NextDecimal(this Random rng)
+        {
+            byte scale = (byte)rng.Next(29);
+            bool sign = rng.Next(2) == 1;
+            return new decimal(rng.NextInt32(),
+                               rng.NextInt32(),
+                               rng.NextInt32(),
+                               sign,
+                               scale);
+        }
+    }
+
     [ApiController]
     [Route("api/[controller]")]
     public class TransactionController : ControllerBase
     {
-        TransactionDbContext dbContext { get;  }
+        TransactionDbContext _dbContext { get;  }
         public TransactionController(TransactionDbContext transactionDb)
         {
-            this.dbContext = transactionDb;
+            this._dbContext = transactionDb;
         }
 
 
         [HttpGet("{id}")]
         public IActionResult GetById(int id)
         {
-            var item = dbContext.Transactions.Find(id);
+            var item = _dbContext.Transactions.Find(id);
             if (item == null)
             {
                 return NotFound();
             }
             return new ObjectResult(item);
         }
+        public static DateTime NextDateTime(Random rng)
+        {
+            int year = 2020;
+            int month = rng.Next(1, 4);
+            int day = rng.Next(1, 29);
+            return new DateTime(year, month, day);
+        }
+
+        
+
 
         [HttpPut]
         public IActionResult PutTransaction(Transaction transaction)
@@ -45,20 +76,20 @@ namespace TransactionWebProject.Controller
             }
             try
             {
-                dbContext.Update(transaction);
-                dbContext.SaveChanges();
+                _dbContext.Update(transaction);
+                _dbContext.SaveChanges();
             }
             catch (DbUpdateConcurrencyException)
             {
                throw;
             }
-            var newTransaction = dbContext.Transactions.Find(transaction.id);
+            var newTransaction = _dbContext.Transactions.Find(transaction.id);
             return Ok(newTransaction);
         }
 
         private bool TransacrionExist(int id)
         {
-            return !dbContext.Transactions.Any(x => x.id == id);
+            return !_dbContext.Transactions.Any(x => x.id == id);
         }
 
         [HttpPost]
@@ -71,9 +102,9 @@ namespace TransactionWebProject.Controller
             //if (TransacrionExist(transaction.id)) return BadRequest("SMTH");
 
             transaction._currency.CurrencyDate = transaction.TransactionDate;
-
-            dbContext.Transactions.Add(transaction);
-            dbContext.SaveChanges();
+            //TO DO UAH
+            _dbContext.Transactions.Add(transaction);
+            _dbContext.SaveChanges();
             return Ok(transaction);
         }
 
@@ -86,8 +117,8 @@ namespace TransactionWebProject.Controller
             }
             if (TransacrionExist(id)) return BadRequest();
 
-            dbContext.Transactions.Remove(dbContext.Transactions.Find(id));
-            dbContext.SaveChanges();
+            _dbContext.Transactions.Remove(_dbContext.Transactions.Find(id));
+            _dbContext.SaveChanges();
 
             return Ok();
         }
